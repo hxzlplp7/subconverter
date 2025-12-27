@@ -163,7 +163,7 @@ jobs:
         with:
           usesh: true
           prepare: |
-            pkg install -y git cmake ninja pcre2 curl rapidjson yaml-cpp
+            pkg install -y git cmake ninja pcre2 curl rapidjson yaml-cpp pkgconf openssl libevent
           run: |
             set -xe
             mkdir -p build && cd build
