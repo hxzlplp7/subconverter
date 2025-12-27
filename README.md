@@ -1,142 +1,160 @@
 # subconverter
 
-Utility to convert between various proxy subscription formats.
+订阅转换工具 - 支持多种代理订阅格式之间的转换
 
-original git: https://github.com/asdlokj1qpi23/subconverter
+基于 [tindy2013/subconverter](https://github.com/tindy2013/subconverter) 修改
 
-[![Build Status](https://github.com/asdlokj1qpi233/subconverter/actions/workflows/docker.yml/badge.svg)](https://github.com/asdlokj1qpi233/subconverter/actions)
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/asdlokj1qpi233/subconverter.svg)](https://github.com/asdlokj1qpi23/subconverter/tags)
-[![GitHub release](https://img.shields.io/github/release/asdlokj1qpi233/subconverter.svg)](https://github.com/asdlokj1qpi233/subconverter/releases)
-[![GitHub license](https://img.shields.io/github/license/asdlokj1qpi233/subconverter.svg)](https://github.com/tindy2013/subconverter/blob/master/LICENSE)
+## ✨ 本项目改进
 
-[Docker README](https://github.com/asdlokj1qpi23/subconverter/blob/master/README-docker.md)
+- **修复 AnyTLS 转换问题**：原版转换 AnyTLS 链接时缺少 `sni`、`alpn`、`udp`、`skip-cert-verify` 等关键参数，本项目已修复
+- **新增 FreeBSD 支持**：增加 FreeBSD (Serv00/Hostuno) 平台编译，可直接在 Serv00 上运行
 
-[中文文档](https://github.com/asdlokj1qpi23/subconverter/blob/master/README-cn.md)
+## 📦 下载
 
-- [subconverter](#subconverter)
-  - [Docker](#docker)
-  - [Supported Types](#supported-types)
-  - [Quick Usage](#quick-usage)
-    - [Access Interface](#access-interface)
-    - [Description](#description)
-  - [Advanced Usage](#advanced-usage)
-  - [Auto Upload](#auto-upload)
-  
-## Docker
+从 [Releases](../../releases) 页面下载对应平台的版本：
 
-For running this docker, simply use the following commands:
+| 平台 | 文件名 | 说明 |
+|------|--------|------|
+| Linux x64 | `subconverter_linux64.tar.gz` | 适用于大多数 Linux 服务器 |
+| Linux x86 | `subconverter_linux32.tar.gz` | 32位 Linux |
+| Linux ARM64 | `subconverter_aarch64.tar.gz` | ARM64 服务器/树莓派等 |
+| Linux ARMv7 | `subconverter_armv7.tar.gz` | ARMv7 设备 |
+| Windows x64 | `subconverter_win64.7z` | Windows 64位 |
+| Windows x86 | `subconverter_win32.7z` | Windows 32位 |
+| macOS Intel | `subconverter_darwin64.tar.gz` | macOS Intel 芯片 |
+| macOS ARM | `subconverter_darwinarm.tar.gz` | macOS Apple Silicon |
+| **FreeBSD x64** | `subconverter_freebsd64.tar.gz` | **Serv00/Hostuno 专用** |
+
+## 🐳 Docker 部署
+
 ```bash
-# run the container detached, forward internal port 25500 to host port 25500
-docker run -d --restart=always -p 25500:25500 asdlokj1qpi23/subconverter:latest
-# then check its status
+# 拉取并运行容器
+docker run -d --restart=always -p 25500:25500 hxzlplp7/subconverter:latest
+
+# 验证是否运行成功
 curl http://localhost:25500/version
-# if you see `subconverter vx.x.x backend` then the container is up and running
+# 返回 "subconverter vx.x.x backend" 表示成功
 ```
-Or run in docker-compose:
+
+Docker Compose 方式：
+
 ```yaml
----
 version: '3'
 services:
   subconverter:
-    image: asdlokj1qpi23/subconverter:latest
+    image: hxzlplp7/subconverter:latest
     container_name: subconverter
     ports:
-      - "15051:25500"
+      - "25500:25500"
     restart: always
 ```
-## Supported Types
 
-| Type                              | As Source | As Target    | Target Name    |
-|-----------------------------------|:---------:| :----------: |----------------|
-| Clash                             |     ✓     |      ✓       | clash          |
-| ClashR                            |     ✓     |      ✓       | clashr         |
-| Quantumult                        |     ✓     |      ✓       | quan           |
-| Quantumult X                      |     ✓     |      ✓       | quanx          |
-| Loon                              |     ✓     |      ✓       | loon           |
-| SS (SIP002)                       |     ✓     |      ✓       | ss             |
-| SS Android                        |     ✓     |      ✓       | sssub          |
-| SSD                               |     ✓     |      ✓       | ssd            |
-| SSR                               |     ✓     |      ✓       | ssr            |
-| Surfboard                         |     ✓     |      ✓       | surfboard      |
-| Surge 2                           |     ✓     |      ✓       | surge&ver=2    |
-| Surge 3                           |     ✓     |      ✓       | surge&ver=3    |
-| Surge 4                           |     ✓     |      ✓       | surge&ver=4    |
-| Surge 5                           |     ✓     |      ✓       | surge&ver=5    |
-| V2Ray                             |     ✓     |      ✓       | v2ray          |
-| Telegram-liked HTTP/Socks 5 links |     ✓     |      ×       | Only as source |
-| Singbox                           |     ✓      |      ✓       | singbox        |
+## 🚀 Serv00/Hostuno 部署
 
-Notice:
-
-1. Shadowrocket users should use `ss`, `ssr` or `v2ray` as target.
-
-2. You can add `&remark=` to Telegram-liked HTTP/Socks 5 links to set a remark for this node. For example:
-
-   - tg://http?server=1.2.3.4&port=233&user=user&pass=pass&remark=Example
-
-   - https://t.me/http?server=1.2.3.4&port=233&user=user&pass=pass&remark=Example
-
-
----
-
-## Quick Usage
-
-> Using default groups and rulesets configuration directly, without changing any settings
-
-### Access Interface
-
-```txt
-http://127.0.0.1:25500/sub?target=%TARGET%&url=%URL%&config=%CONFIG%
+1. 下载 FreeBSD 版本：
+```bash
+wget https://github.com/hxzlplp7/subconverter/releases/latest/download/subconverter_freebsd64.tar.gz
+tar -xzf subconverter_freebsd64.tar.gz
+cd subconverter
 ```
 
-### Description
-
-| Argument | Required | Example | Description |
-| -------- | :------: | :------ | ----------- |
-| target   | Yes      | clash   | Target subscription type. Acquire from Target Name in [Supported Types](#supported-types). |
-| url      | Yes      | https%3A%2F%2Fwww.xxx.com | Subscription to convert. Supports URLs and file paths. Process with [URLEncode](https://www.urlencoder.org/) first. |
-| config   | No       | https%3A%2F%2Fwww.xxx.com | External configuration file path. Supports URLs and file paths. Process with [URLEncode](https://www.urlencoder.org/) first. More examples can be found in [this](https://github.com/lzdnico/subconverteriniexample) repository. |
-
-If you need to merge two or more subscription, you should join them with '|' before the URLEncode process.
-
-Example:
-
-```txt
-You have 2 subscriptions and you want to merge them and generate a Clash subscription:
-1. https://dler.cloud/subscribe/ABCDE?clash=vmess
-2. https://rich.cloud/subscribe/ABCDE?clash=vmess
-
-First use '|' to separate 2 subscriptions:
-https://dler.cloud/subscribe/ABCDE?clash=vmess|https://rich.cloud/subscribe/ABCDE?clash=vmess
-
-Then process it with URLEncode to get %URL%:
-https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess%7Chttps%3A%2F%2Frich.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
-
-Then fill %TARGET% and %URL% in Access Interface with actual values:
-http://127.0.0.1:25500/sub?target=clash&url=https%3A%2F%2Fdler.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess%7Chttps%3A%2F%2Frich.cloud%2Fsubscribe%2FABCDE%3Fclash%3Dvmess
-
-Finally subscribe this link in Clash and you are done!
+2. 运行：
+```bash
+chmod +x subconverter
+./subconverter
 ```
 
----
+3. 后台运行（使用 nohup 或 pm2）：
+```bash
+nohup ./subconverter > /dev/null 2>&1 &
+```
 
-## Advanced Usage
+## 📋 支持的格式
 
-Please refer to [中文文档](https://github.com/asdlokj1qpi23/subconverter/blob/master/README-cn.md#%E8%BF%9B%E9%98%B6%E7%94%A8%E6%B3%95).
+| 类型 | 作为源 | 作为目标 | 目标名称 |
+|------|:------:|:--------:|----------|
+| Clash | ✓ | ✓ | clash |
+| ClashR | ✓ | ✓ | clashr |
+| Quantumult | ✓ | ✓ | quan |
+| Quantumult X | ✓ | ✓ | quanx |
+| Loon | ✓ | ✓ | loon |
+| SS (SIP002) | ✓ | ✓ | ss |
+| SS Android | ✓ | ✓ | sssub |
+| SSD | ✓ | ✓ | ssd |
+| SSR | ✓ | ✓ | ssr |
+| Surfboard | ✓ | ✓ | surfboard |
+| Surge 2/3/4/5 | ✓ | ✓ | surge&ver=X |
+| V2Ray | ✓ | ✓ | v2ray |
+| Singbox | ✓ | ✓ | singbox |
+| **AnyTLS** | ✓ | ✓ | (自动识别) |
 
-## Auto Upload
+## 🔧 快速使用
 
-> Upload Gist automatically
+### 基本接口
 
-Add a [Personal Access Token](https://github.com/settings/tokens/new) into [gistconf.ini](./gistconf.ini) in the root directory, then add `&upload=true` to the local subscription link, then when you access this link, the program will automatically update the content to Gist repository.
+```
+http://127.0.0.1:25500/sub?target=目标格式&url=订阅链接
+```
 
-Example:
+### 参数说明
 
+| 参数 | 必填 | 示例 | 说明 |
+|------|:----:|------|------|
+| target | 是 | clash | 目标订阅格式 |
+| url | 是 | https%3A%2F%2F... | 订阅链接（需 URL 编码） |
+| config | 否 | https%3A%2F%2F... | 外部配置文件（需 URL 编码） |
+
+### 合并多个订阅
+
+使用 `|` 分隔多个订阅链接，然后进行 URL 编码：
+
+```
+原始链接：
+https://sub1.com/link|https://sub2.com/link
+
+URL 编码后：
+https%3A%2F%2Fsub1.com%2Flink%7Chttps%3A%2F%2Fsub2.com%2Flink
+
+完整请求：
+http://127.0.0.1:25500/sub?target=clash&url=https%3A%2F%2Fsub1.com%2Flink%7Chttps%3A%2F%2Fsub2.com%2Flink
+```
+
+## 📤 自动上传到 Gist
+
+1. 在 [GitHub 设置](https://github.com/settings/tokens/new) 创建 Personal Access Token
+2. 编辑 `gistconf.ini`：
 ```ini
 [common]
-;uncomment the following line and enter your token to enable upload function
-token = xxxxxxxxxxxxxxxxxxxxxxxx(Your Personal Access Token)
+token = 你的Token
 ```
-## Thanks
-[tindy2013](https://github.com/tindy2013)
-[https://github.com/tindy2013/subconverter](https://github.com/tindy2013/subconverter)
+3. 在订阅链接后添加 `&upload=true`
+
+## 🛠️ AnyTLS 转换示例
+
+输入链接：
+```
+anytls://password@server:port?sni=example.com&fp=chrome#节点名称
+```
+
+转换后的 Clash 配置：
+```yaml
+- name: 节点名称
+  type: anytls
+  server: server
+  port: port
+  password: password
+  client-fingerprint: chrome
+  udp: true
+  alpn: [h2, http/1.1]
+  sni: example.com
+  skip-cert-verify: true
+```
+
+## 🙏 致谢
+
+- [tindy2013/subconverter](https://github.com/tindy2013/subconverter) - 原始项目
+- [asdlokj1qpi23/subconverter](https://github.com/asdlokj1qpi23/subconverter) - 上游 fork
+
+## 📄 许可证
+
+GPL-3.0 License
