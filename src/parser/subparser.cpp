@@ -2852,7 +2852,7 @@ int explodeConfContent(const std::string &content, std::vector<Proxy> &nodes) {
 void explodeSingboxTransport(rapidjson::Value &singboxNode, std::string &net, std::string &host, std::string &path,
                              std::string edge) {
     if (singboxNode.HasMember("transport") && singboxNode["transport"].IsObject()) {
-        auto transport = singboxNode["transport"].GetObject();
+        rapidjson::Value& transport = singboxNode["transport"];
         net = GetMember(transport, "type");
         switch (hash_(net)) {
             case "http"_hash: {
@@ -2862,7 +2862,7 @@ void explodeSingboxTransport(rapidjson::Value &singboxNode, std::string &net, st
             case "ws"_hash: {
                 path = GetMember(transport, "path");
                 if (transport.HasMember("headers") && transport["headers"].IsObject()) {
-                    auto headers = transport["headers"].GetObject();
+                    rapidjson::Value& headers = transport["headers"];
                     host = GetMember(headers, "Host");
                     edge = GetMember(headers, "Edge");
                 }
@@ -2903,7 +2903,7 @@ void explodeSingbox(rapidjson::Value &outbounds, std::vector<Proxy> &nodes) {
             std::string fingerprint;
             std::string congestion_control, udp_relay_mode; //quic
             tribool udp, tfo, scv, rrt, disableSni;
-            auto singboxNode = outbounds[i].GetObject();
+            rapidjson::Value& singboxNode = outbounds[i];
             if (singboxNode.HasMember("type") && singboxNode["type"].IsString()) {
                 Proxy node;
                 proxytype = singboxNode["type"].GetString();
@@ -2913,13 +2913,13 @@ void explodeSingbox(rapidjson::Value &outbounds, std::vector<Proxy> &nodes) {
                 tfo = GetMember(singboxNode, "tcp_fast_open");
                 std::vector<std::string> alpnList;
                 if (singboxNode.HasMember("tls") && singboxNode["tls"].IsObject()) {
-                    auto tlsObj = singboxNode["tls"].GetObject();
+                    rapidjson::Value& tlsObj = singboxNode["tls"];
                     if (tlsObj.HasMember("enabled") && tlsObj["enabled"].IsBool() && tlsObj["enabled"].GetBool()) {
                         tls = "tls";
                     }
                     sni = GetMember(tlsObj, "server_name");
                     if (tlsObj.HasMember("alpn") && tlsObj["alpn"].IsArray() && !tlsObj["alpn"].Empty()) {
-                        auto alpns = tlsObj["alpn"].GetArray();
+                        rapidjson::Value& alpns = tlsObj["alpn"];
                         if (alpns.Size() > 0) {
                             alpn = alpns[0].GetString();
                             for (auto &item: tlsObj["alpn"].GetArray()) {
@@ -2939,7 +2939,7 @@ void explodeSingbox(rapidjson::Value &outbounds, std::vector<Proxy> &nodes) {
                     }
                     if (tlsObj.HasMember("reality") && tlsObj["reality"].IsObject()) {
                         tls = "reality";
-                        auto reality = tlsObj["reality"].GetObject();
+                        rapidjson::Value& reality = tlsObj["reality"];
                         if (reality.HasMember("server_name") && reality["server_name"].IsString()) {
                             host = reality["server_name"].GetString();
                         }
@@ -2951,7 +2951,7 @@ void explodeSingbox(rapidjson::Value &outbounds, std::vector<Proxy> &nodes) {
                         }
                     }
                     if (tlsObj.HasMember("utls") && tlsObj["utls"].IsObject()) {
-                        if (auto reality = tlsObj["utls"].GetObject();
+                        if (rapidjson::Value& reality = tlsObj["utls"];
                             reality.HasMember("fingerprint") && reality["fingerprint"].IsString()) {
                             fingerprint = reality["fingerprint"].GetString();
                         }
@@ -2996,7 +2996,7 @@ void explodeSingbox(rapidjson::Value &outbounds, std::vector<Proxy> &nodes) {
                         flow = GetMember(singboxNode, "flow");
                         packet_encoding = GetMember(singboxNode, "packet_encoding");
                         if (singboxNode.HasMember("transport") && singboxNode["transport"].IsObject()) {
-                            auto transport = singboxNode["transport"].GetObject();
+                            rapidjson::Value& transport = singboxNode["transport"];
                             net = GetMember(transport, "type");
                             switch (hash_(net)) {
                                 case "tcp"_hash: {
@@ -3005,7 +3005,7 @@ void explodeSingbox(rapidjson::Value &outbounds, std::vector<Proxy> &nodes) {
                                 case "ws"_hash: {
                                     path = GetMember(transport, "path");
                                     if (transport.HasMember("headers") && transport["headers"].IsObject()) {
-                                        auto headers = transport["headers"].GetObject();
+                                        rapidjson::Value& headers = transport["headers"];
                                         host = GetMember(headers, "Host");
                                         edge = GetMember(headers, "Edge");
                                     }
@@ -3089,7 +3089,7 @@ void explodeSingbox(rapidjson::Value &outbounds, std::vector<Proxy> &nodes) {
                         up = GetMember(singboxNode, "up");
                         down = GetMember(singboxNode, "down");
                         if (singboxNode.HasMember("obfs") && singboxNode["obfs"].IsObject()) {
-                            auto obfsOpt = singboxNode["obfs"].GetObject();
+                            rapidjson::Value& obfsOpt = singboxNode["obfs"];
                             obfsParam = GetMember(obfsOpt, "type");
                             obfsPassword = GetMember(obfsOpt, "password");
                         }
