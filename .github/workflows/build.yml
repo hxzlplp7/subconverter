@@ -163,13 +163,39 @@ jobs:
         with:
           usesh: true
           prepare: |
-            pkg install -y git cmake ninja pcre2 curl rapidjson yaml-cpp pkgconf openssl libevent toml11 quickjs
+            pkg install -y git cmake ninja pcre2 curl rapidjson yaml-cpp pkgconf openssl libevent toml11
           run: |
             set -xe
+            
+            # Build quickjspp from source
+            git clone --no-checkout https://github.com/ftk/quickjspp.git
+            cd quickjspp
+            git fetch origin 0c00c48895919fc02da3f191a2da06addeb07f09
+            git checkout 0c00c48895919fc02da3f191a2da06addeb07f09
+            cmake -DCMAKE_BUILD_TYPE=Release .
+            make quickjs -j$(sysctl -n hw.ncpu)
+            mkdir -p /usr/local/lib/quickjs/
+            cp quickjs/libquickjs.a /usr/local/lib/quickjs/
+            mkdir -p /usr/local/include/quickjs/
+            cp quickjs/quickjs.h quickjs/quickjs-libc.h /usr/local/include/quickjs/
+            cp quickjspp.hpp /usr/local/include/
+            cd ..
+            
+            # Build libcron from source
+            git clone https://github.com/PerMalmberg/libcron --depth=1
+            cd libcron
+            git submodule update --init
+            cmake -DCMAKE_BUILD_TYPE=Release .
+            make libcron install -j$(sysctl -n hw.ncpu)
+            cd ..
+            
+            # Build subconverter
             mkdir -p build && cd build
             cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
             ninja -j$(sysctl -n hw.ncpu)
             cd ..
+            
+            # Package
             mkdir -p subconverter
             cp build/subconverter subconverter/
             cp -r base/* subconverter/
