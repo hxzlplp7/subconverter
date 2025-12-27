@@ -163,7 +163,7 @@ jobs:
         with:
           usesh: true
           prepare: |
-            pkg install -y git cmake ninja pcre2 curl rapidjson yaml-cpp pkgconf openssl libevent toml11
+            pkg install -y git cmake ninja pcre2 curl rapidjson yaml-cpp pkgconf openssl libevent
           run: |
             set -xe
             
@@ -187,6 +187,13 @@ jobs:
             git submodule update --init
             cmake -DCMAKE_BUILD_TYPE=Release .
             make libcron install -j$(sysctl -n hw.ncpu)
+            cd ..
+            
+            # Build toml11 from source
+            git clone https://github.com/ToruNiina/toml11 --branch v4.3.0 --depth=1
+            cd toml11
+            cmake -DCMAKE_CXX_STANDARD=11 -DCMAKE_BUILD_TYPE=Release .
+            make install -j$(sysctl -n hw.ncpu)
             cd ..
             
             # Build subconverter
